@@ -1,44 +1,39 @@
 import ExpoModulesCore
 
 public class ExpoSettingsModule: Module {
-  // Each module class must implement the definition function. The definition consists of components
-  // that describes the module's functionality and behavior.
-  // See https://docs.expo.dev/modules/module-api for more details about available components.
   public func definition() -> ModuleDefinition {
-    // Sets the name of the module that JavaScript code will use to refer to the module. Takes a string as an argument.
-    // Can be inferred from module's class name, but it's recommended to set it explicitly for clarity.
-    // The module will be accessible from `requireNativeModule('ExpoSettings')` in JavaScript.
     Name("ExpoSettings")
 
-    // Sets constant properties on the module. Can take a dictionary or a closure that returns a dictionary.
-    Constants([
-      "PI": Double.pi
-    ])
+    // Define the events your module can emit
+    Events("onChangeTheme")
 
-    // Defines event names that the module can send to JavaScript.
-    Events("onChange")
-
-    // Defines a JavaScript synchronous function that runs the native code on the JavaScript thread.
-    Function("hello") {
-      return "Hello world! 👋"
-    }
-
-    // Defines a JavaScript function that always returns a Promise and whose native code
-    // is by default dispatched on the different thread than the JavaScript runtime runs on.
-    AsyncFunction("setValueAsync") { (value: String) in
-      // Send an event to JavaScript.
-      self.sendEvent("onChange", [
-        "value": value
+    // Function to set the theme
+    Function("setTheme") { (theme: Theme) -> Void in
+      UserDefaults.standard.set(theme.rawValue, forKey: "theme")
+      sendEvent("onChangeTheme", [
+        "theme": theme.rawValue
       ])
     }
 
-    // Enables the module to be used as a native view. Definition components that are accepted as part of the
-    // view definition: Prop, Events.
-    View(ExpoSettingsView.self) {
-      // Defines a setter for the `name` prop.
-      Prop("name") { (view: ExpoSettingsView, prop: String) in
-        print(prop)
-      }
+    // Function to get the current theme
+    Function("getTheme") { () -> String in
+      return UserDefaults.standard.string(forKey: "theme") ?? Theme.system.rawValue
     }
+
+    // New function to generate a random number between min and max
+    Function("generateRandomNumber") { (min: Int, max: Int) -> Int in
+      // Ensure min is less than max
+      guard min < max else {
+        return min // Or handle the error as appropriate
+      }
+      return Int.random(in: min...max)
+    }
+  }
+
+  // Enum to define possible themes
+  enum Theme: String, Enumerable {
+    case light
+    case dark
+    case system
   }
 }
